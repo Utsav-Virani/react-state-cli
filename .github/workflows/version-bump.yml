@@ -99,7 +99,7 @@ jobs:
         mv temp_changelog.md CHANGELOG.md
     
     - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v5
+      uses: peter-evans/create-pull-request@v7
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: "chore: bump version to ${{ steps.version_bump.outputs.NEW_VERSION }}"
