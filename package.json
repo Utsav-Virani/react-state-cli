@@ -1,14 +1,45 @@
 {
   "name": "react-state-cli",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "1.0.1",
+  "description": "🧠 Effortless Redux boilerplate generation from initial state files - Generate Redux Toolkit slices, reducers, and TypeScript interfaces automatically",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "test:manual": "npm run build && node dist/index.js generate ./examples/initState.ts --verbose",
+    "test:dry": "npm run build && node dist/index.js generate ./examples/initState.ts --dry-run"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "redux",
+    "redux-toolkit",
+    "cli",
+    "boilerplate",
+    "generator",
+    "typescript",
+    "react",
+    "state-management",
+    "automation",
+    "slice",
+    "reducer",
+    "rtk"
+  ],
+  "author": "Utsav Virani",
   "license": "MIT",
+  "homepage": "https://github.com/Utsav-Virani/react-state-cli.git#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Utsav-Virani/react-state-cli.git.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Utsav-Virani/react-state-cli.git/issues"
+  },
   "type": "commonjs",
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
@@ -22,7 +53,11 @@
   },
   "devDependencies": {
     "@types/ejs": "^3.1.5",
-    "@types/fs-extra": "^11.0.4"
+    "@types/fs-extra": "^11.0.4",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
   },
   "bin": {
     "react-state-cli": "./dist/index.js"
