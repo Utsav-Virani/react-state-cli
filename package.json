@@ -32,13 +32,13 @@
   ],
   "author": "Utsav Virani",
   "license": "MIT",
-  "homepage": "https://github.com/Utsav-Virani/react-state-cli.git#readme",
+  "homepage": "https://github.com/Utsav-Virani/react-state-cli#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Utsav-Virani/react-state-cli.git.git"
+    "url": "git+https://github.com/Utsav-Virani/react-state-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/Utsav-Virani/react-state-cli.git/issues"
+    "url": "https://github.com/Utsav-Virani/react-state-cli/issues"
   },
   "type": "commonjs",
   "dependencies": {

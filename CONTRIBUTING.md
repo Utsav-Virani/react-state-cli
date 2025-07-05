@@ -113,7 +113,7 @@ When making changes, please test:
 
 ## Reporting Bugs
 
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/Utsav-Virani/react-state-cli.git/issues/new).
+We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/Utsav-Virani/react-state-cli/issues/new).
 
 **Great Bug Reports** tend to have:
 

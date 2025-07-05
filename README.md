@@ -259,9 +259,9 @@ MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🐛 Issues & Support
 
-- 🐛 **Bug reports**: [GitHub Issues](https://github.com/Utsav-Virani/react-state-cli.git/issues)
-- 💡 **Feature requests**: [GitHub Issues](https://github.com/Utsav-Virani/react-state-cli.git/issues)
-- 📖 **Documentation**: [GitHub Wiki](https://github.com/Utsav-Virani/react-state-cli.git/wiki)
+- 🐛 **Bug reports**: [GitHub Issues](https://github.com/Utsav-Virani/react-state-cli/issues)
+- 💡 **Feature requests**: [GitHub Issues](https://github.com/Utsav-Virani/react-state-cli/issues)
+- 📖 **Documentation**: [GitHub Wiki](https://github.com/Utsav-Virani/react-state-cli/wiki)
 
 ## 🗺️ Roadmap
 
