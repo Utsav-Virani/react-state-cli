@@ -1,0 +1,50 @@
+name: 'Dependency Review'
+
+on: 
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/dependency-review.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v3
+      with:
+        fail-on-severity: high
+        allow-dependencies-licenses: MIT, Apache-2.0, BSD-3-Clause, ISC, BSD-2-Clause
+        deny-licenses: GPL-3.0, LGPL-3.0, AGPL-3.0
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run npm audit
+      run: npm audit --audit-level=high
+    
+    - name: Check for known vulnerabilities
+      run: |
+        # Check if there are any high or critical vulnerabilities
+        AUDIT_RESULT=$(npm audit --audit-level=high --json) 
+        if [ $? -ne 0 ]; then
+          echo "❌ High or critical vulnerabilities found!"
+          echo "$AUDIT_RESULT" | jq '.vulnerabilities'
+          exit 1
+        else
+          echo "✅ No high or critical vulnerabilities found"
+        fi 

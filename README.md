@@ -4,6 +4,9 @@
 
 [![npm version](https://badge.fury.io/js/react-state-cli.svg)](https://badge.fury.io/js/react-state-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/Utsav-Virani/react-state-cli/workflows/CI/badge.svg)](https://github.com/Utsav-Virani/react-state-cli/actions/workflows/ci.yml)
+[![Release](https://github.com/Utsav-Virani/react-state-cli/workflows/Release/badge.svg)](https://github.com/Utsav-Virani/react-state-cli/actions/workflows/release.yml)
+[![CodeQL](https://github.com/Utsav-Virani/react-state-cli/workflows/CodeQL/badge.svg)](https://github.com/Utsav-Virani/react-state-cli/actions/workflows/codeql.yml)
 
 A powerful CLI tool that automatically generates Redux Toolkit slices, reducers, TypeScript interfaces, and state management boilerplate from your initial state definitions. Say goodbye to repetitive Redux setup!
 

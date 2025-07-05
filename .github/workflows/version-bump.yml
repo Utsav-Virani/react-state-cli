@@ -1,0 +1,134 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      pre_release:
+        description: 'Pre-release version'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  version-bump:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Configure Git
+      run: |
+        git config user.name 'github-actions[bot]'
+        git config user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Run tests before version bump
+      run: |
+        npm run lint
+        npm run format:check
+        npm run build
+        npm run test:dry
+    
+    - name: Bump version
+      id: version_bump
+      run: |
+        if [ "${{ github.event.inputs.pre_release }}" == "true" ]; then
+          NEW_VERSION=$(npm version pre${{ github.event.inputs.version_type }} --no-git-tag-version)
+        else
+          NEW_VERSION=$(npm version ${{ github.event.inputs.version_type }} --no-git-tag-version)
+        fi
+        echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "VERSION_NUMBER=${NEW_VERSION#v}" >> $GITHUB_OUTPUT
+    
+    - name: Update CHANGELOG.md
+      run: |
+        TODAY=$(date +%Y-%m-%d)
+        VERSION="${{ steps.version_bump.outputs.VERSION_NUMBER }}"
+        
+        # Create temporary file with new changelog entry
+        cat > temp_changelog.md << EOF
+        # Changelog
+        
+        All notable changes to this project will be documented in this file.
+        
+        The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+        and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+        
+        ## [Unreleased]
+        
+        ## [$VERSION] - $TODAY
+        
+        ### Added
+        - New features and enhancements
+        
+        ### Changed
+        - Updates and improvements
+        
+        ### Fixed
+        - Bug fixes and patches
+        
+        EOF
+        
+        # Append existing changelog content (skip the header)
+        tail -n +9 CHANGELOG.md >> temp_changelog.md
+        mv temp_changelog.md CHANGELOG.md
+    
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "chore: bump version to ${{ steps.version_bump.outputs.NEW_VERSION }}"
+        title: "🚀 Release ${{ steps.version_bump.outputs.NEW_VERSION }}"
+        body: |
+          ## 🚀 Release ${{ steps.version_bump.outputs.NEW_VERSION }}
+          
+          This PR bumps the version to `${{ steps.version_bump.outputs.NEW_VERSION }}`.
+          
+          ### Changes
+          - Updated package.json version
+          - Updated CHANGELOG.md
+          
+          ### Before merging
+          - [ ] Review and update CHANGELOG.md with actual changes
+          - [ ] Verify all tests pass
+          - [ ] Check that documentation is up to date
+          
+          ### After merging
+          This will automatically trigger:
+          - Creation of a git tag
+          - GitHub release
+          - NPM publication
+          
+          ---
+          
+          **Note**: Edit the CHANGELOG.md section for this version before merging.
+        branch: release/${{ steps.version_bump.outputs.NEW_VERSION }}
+        delete-branch: true
+        labels: |
+          release
+          automated 

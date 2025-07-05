@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      id-token: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        registry-url: 'https://registry.npmjs.org'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: |
+        npm run lint
+        npm run format:check
+        npm run build
+        npm run test:dry
+    
+    - name: Extract version from tag
+      id: extract_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+    
+    - name: Verify package.json version matches tag
+      run: |
+        PACKAGE_VERSION=$(node -p "require('./package.json').version")
+        if [ "$PACKAGE_VERSION" != "${{ steps.extract_version.outputs.VERSION }}" ]; then
+          echo "Version mismatch: package.json has $PACKAGE_VERSION but tag is ${{ steps.extract_version.outputs.VERSION }}"
+          exit 1
+        fi
+    
+    - name: Build for production
+      run: npm run build
+    
+    - name: Publish to npm
+      run: npm publish --provenance --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ steps.extract_version.outputs.VERSION }}
+        body: |
+          ## Changes in v${{ steps.extract_version.outputs.VERSION }}
+          
+          🚀 **New Features**
+          - Enhanced Redux boilerplate generation
+          - Improved TypeScript support
+          - Better error handling
+          
+          📦 **Installation**
+          ```bash
+          npm install -g react-state-cli@${{ steps.extract_version.outputs.VERSION }}
+          ```
+          
+          📖 **Documentation**
+          See the [README](https://github.com/Utsav-Virani/react-state-cli#readme) for usage instructions.
+          
+          ---
+          
+          **Full Changelog**: https://github.com/Utsav-Virani/react-state-cli/blob/main/CHANGELOG.md
+        draft: false
+        prerelease: false 

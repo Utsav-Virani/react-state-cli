@@ -1,0 +1,57 @@
+name: Auto Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    
+    if: |
+      (github.actor == 'dependabot[bot]' && github.event.pull_request.user.login == 'dependabot[bot]') ||
+      (github.event.review.state == 'approved' && github.event.pull_request.user.login != 'dependabot[bot]')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run full test suite
+      run: |
+        npm run lint
+        npm run format:check
+        npm run build
+        npm run test:dry
+        npm run test:manual
+    
+    - name: Clean up test files
+      run: rm -rf examples/slice.ts examples/reducers.ts examples/types.ts state.ts
+    
+    - name: Auto-merge dependabot PRs
+      if: github.actor == 'dependabot[bot]'
+      run: |
+        echo "Auto-merging dependabot PR after successful tests"
+        gh pr merge --auto --merge "$PR_URL"
+      env:
+        PR_URL: ${{ github.event.pull_request.html_url }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Auto-merge approved PRs
+      if: github.event.review.state == 'approved'
+      run: |
+        echo "Auto-merging approved PR after successful tests"
+        gh pr merge --auto --merge "$PR_URL"
+      env:
+        PR_URL: ${{ github.event.pull_request.html_url }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
