@@ -49,10 +49,29 @@ jobs:
     - name: Build for production
       run: npm run build
     
+    - name: Check if version exists on npm
+      id: check_npm
+      run: |
+        VERSION="${{ steps.extract_version.outputs.VERSION }}"
+        if npm view react-state-cli@$VERSION version 2>/dev/null; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Version $VERSION already exists on npm"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Version $VERSION does not exist on npm"
+        fi
+    
     - name: Publish to npm
+      if: steps.check_npm.outputs.exists == 'false'
       run: npm publish --provenance --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    
+    - name: Skip npm publish (already exists)
+      if: steps.check_npm.outputs.exists == 'true'
+      run: |
+        echo "⏭️ Skipping npm publish - version ${{ steps.extract_version.outputs.VERSION }} already exists"
+        echo "✅ Package is already available at: https://www.npmjs.com/package/react-state-cli"
     
     - name: Create GitHub Release
       uses: actions/create-release@v1
@@ -62,20 +81,44 @@ jobs:
         tag_name: ${{ github.ref }}
         release_name: Release ${{ steps.extract_version.outputs.VERSION }}
         body: |
-          ## Changes in v${{ steps.extract_version.outputs.VERSION }}
+          ## 🎉 What's New in v${{ steps.extract_version.outputs.VERSION }}
+
+          ### ✨ Added Features
+          - **CLI Enhancements**: Added `--verbose` and `--dry-run` flags for better debugging
+          - **Improved Error Handling**: Enhanced validation and error messages
+          - **Better Type Inference**: Improved handling of arrays, objects, and primitive types
+          - **Enhanced User Experience**: Added chalk colors for better console output
+
+          ### 🔧 Bug Fixes
+          - **Fixed CLI Executable**: Changed shebang from `#!/usr/bin/env ts-node` to `#!/usr/bin/env node`
+          - **Resolved CLI Issues**: Fixed critical issues preventing proper execution
+
+          ### 📚 Documentation
+          - **Comprehensive README**: Added detailed installation and usage instructions
+          - **Contributing Guidelines**: Added CONTRIBUTING.md with development setup
+          - **License**: Added MIT license file
+          - **Changelog**: Added version tracking with CHANGELOG.md
+
+          ### 🤖 Automation
+          - **GitHub Actions**: Complete CI/CD pipeline with automated testing
+          - **Dependabot**: Automated dependency updates
+          - **Auto-merge**: Automated PR merging for approved changes
+          - **Security Scanning**: CodeQL and dependency review workflows
           
-          🚀 **New Features**
-          - Enhanced Redux boilerplate generation
-          - Improved TypeScript support
-          - Better error handling
-          
-          📦 **Installation**
+          ### 📦 Installation
           ```bash
           npm install -g react-state-cli@${{ steps.extract_version.outputs.VERSION }}
           ```
           
-          📖 **Documentation**
-          See the [README](https://github.com/Utsav-Virani/react-state-cli#readme) for usage instructions.
+          ### 🚀 Usage
+          ```bash
+          react-state-cli generate ./src/initState.ts --verbose
+          ```
+          
+          ### 🔗 Links
+          - **npm Package**: https://www.npmjs.com/package/react-state-cli
+          - **Documentation**: https://github.com/Utsav-Virani/react-state-cli#readme
+          - **Issues**: https://github.com/Utsav-Virani/react-state-cli/issues
           
           ---
           
