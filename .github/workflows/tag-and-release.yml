@@ -2,7 +2,7 @@ name: Tag and Release
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths: [ 'package.json' ]
 
 jobs:
