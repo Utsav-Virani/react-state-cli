@@ -40,7 +40,7 @@
   "bugs": {
     "url": "https://github.com/Utsav-Virani/react-state-cli/issues"
   },
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
     "chalk": "^5.4.1",
