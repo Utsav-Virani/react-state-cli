@@ -18,14 +18,55 @@ export async function generateFilesFromInitState(
   options: GenerateOptions = {}
 ): Promise<void> {
   try {
-    const sliceDir = path.dirname(initStatePath)
-    const sliceName = path.basename(sliceDir)
-    const reduxDir = path.resolve(sliceDir, '..') // goes to /redux
-    const stateFilePath = path.resolve(reduxDir, 'state.ts')
+    const originalSliceDir = path.dirname(initStatePath)
+    const sliceName = path.basename(originalSliceDir)
+    
+    // Determine Redux structure and slice directory
+    let stateFilePath: string
+    let reduxRootDir: string
+    let sliceDir: string
+    
+    // Check if we're already in a Redux structure
+    const parentDir = path.dirname(originalSliceDir)
+    const parentDirName = path.basename(parentDir)
+    
+    if (parentDirName === 'redux' || parentDirName === 'store') {
+      // We're in src/redux/user/ structure - keep existing structure
+      reduxRootDir = parentDir
+      sliceDir = originalSliceDir
+      stateFilePath = path.resolve(reduxRootDir, 'state.ts')
+    } else {
+      // We need to create/find the redux structure
+      // Look for existing src/redux or create it
+      const cwd = process.cwd()
+      const srcReduxPath = path.resolve(cwd, 'src', 'redux')
+      const srcStorePath = path.resolve(cwd, 'src', 'store')
+      
+      if (await fs.pathExists(srcReduxPath)) {
+        reduxRootDir = srcReduxPath
+      } else if (await fs.pathExists(srcStorePath)) {
+        reduxRootDir = srcStorePath
+      } else {
+        // Create src/redux structure
+        reduxRootDir = srcReduxPath
+        await fs.ensureDir(reduxRootDir)
+        if (options.verbose) {
+          console.log(chalk.blue(`📁 Created Redux directory: ${reduxRootDir}`))
+        }
+      }
+      
+      // Create the slice directory in the Redux structure
+      sliceDir = path.resolve(reduxRootDir, sliceName)
+      await fs.ensureDir(sliceDir)
+      stateFilePath = path.resolve(reduxRootDir, 'state.ts')
+    }
 
     if (options.verbose) {
+      console.log(chalk.blue(`📂 Original directory: ${originalSliceDir}`))
       console.log(chalk.blue(`📂 Slice directory: ${sliceDir}`))
       console.log(chalk.blue(`📝 Slice name: ${sliceName}`))
+      console.log(chalk.blue(`📁 Redux root directory: ${reduxRootDir}`))
+      console.log(chalk.blue(`📄 State file path: ${stateFilePath}`))
     }
 
     const initState = await parseInitState(initStatePath)
@@ -114,9 +155,19 @@ export async function generateFilesFromInitState(
     )
     const stateTemplate = await fs.readFile(stateTemplatePath, 'utf-8')
 
+    // Determine the correct import path for the types file
+    // Calculate relative path from state.ts location to types.ts location
+    const typesFilePath = path.resolve(sliceDir, 'types.ts')
+    const stateDir = path.dirname(stateFilePath)
+    const relativePath = path.relative(stateDir, typesFilePath)
+    
+    // Convert to proper import path (use forward slashes and remove .ts extension)
+    const importPath = relativePath.replace(/\\/g, '/').replace(/\.ts$/, '')
+    
     const renderedState = ejs.render(stateTemplate, {
       sliceName,
-      interfaceName
+      interfaceName,
+      importPath: `./${importPath}`
     })
 
     const stateExists = await fs.pathExists(stateFilePath)
