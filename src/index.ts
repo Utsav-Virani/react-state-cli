@@ -4,7 +4,7 @@ import { Command } from 'commander'
 import path from 'path'
 import fs from 'fs-extra'
 import chalk from 'chalk'
-import { generateFilesFromInitState } from './generate'
+import { generateFilesFromInitState } from './generate.js'
 
 const program = new Command()
 

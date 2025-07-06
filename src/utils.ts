@@ -23,7 +23,14 @@ export async function parseInitState(
     }
 
     // Import the file
-    const imported = await import(filePath)
+    let imported: any
+
+    if (filePath.endsWith('.ts')) {
+      // For TypeScript files, use ts-node to compile and evaluate
+      imported = await importTypeScriptFile(filePath)
+    } else {
+      imported = await import(filePath)
+    }
 
     // Validate default export exists
     if (!imported.default) {
@@ -73,6 +80,53 @@ export async function parseInitState(
       )
     }
     throw error
+  }
+}
+
+/**
+ * Import a TypeScript file using ts-node
+ */
+async function importTypeScriptFile(filePath: string): Promise<any> {
+  try {
+    // Use dynamic import with ts-node/esm loader
+    const { register } = await import('ts-node')
+
+    // Register ts-node for ESM
+    register({
+      esm: true,
+      experimentalSpecifierResolution: 'node'
+    })
+
+    // Import the TypeScript file
+    const fileUrl = `file://${filePath}`
+    return await import(fileUrl)
+  } catch (error) {
+    // Fallback: try to compile and evaluate manually
+    const tsNode = await import('ts-node')
+    const service = tsNode.create({
+      compilerOptions: {
+        module: 'ESNext',
+        target: 'ES2020',
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true
+      }
+    })
+
+    const fileContent = await fs.readFile(filePath, 'utf-8')
+    const compiled = service.compile(fileContent, filePath)
+
+    // Create a temporary file to import
+    const tempFile = filePath.replace('.ts', '.temp.js')
+    await fs.writeFile(tempFile, compiled)
+
+    try {
+      const result = await import(`file://${tempFile}`)
+      await fs.remove(tempFile)
+      return result
+    } catch (importError) {
+      await fs.remove(tempFile)
+      throw importError
+    }
   }
 }
 

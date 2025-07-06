@@ -1,8 +1,12 @@
 import path from 'path'
 import fs from 'fs-extra'
 import chalk from 'chalk'
-import { parseInitState } from './utils'
+import { parseInitState } from './utils.js'
 import ejs from 'ejs'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 export interface GenerateOptions {
   verbose?: boolean
