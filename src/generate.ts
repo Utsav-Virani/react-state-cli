@@ -13,10 +13,10 @@ export interface GenerateOptions {
   dryRun?: boolean
 }
 
-export async function generateFilesFromInitState(
+export const generateFilesFromInitState = async (
   initStatePath: string,
   options: GenerateOptions = {}
-): Promise<void> {
+): Promise<void> => {
   try {
     const originalSliceDir = path.dirname(initStatePath)
     const sliceName = path.basename(originalSliceDir)
@@ -215,29 +215,115 @@ export async function generateFilesFromInitState(
   }
 }
 
-function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1)
+// * Test added
+export const capitalize = (str: string): string =>
+  str.charAt(0).toUpperCase() + str.slice(1)
+
+// export const inferType = (value: unknown): string => {
+//   if (value === null) return 'null'
+//   if (value === undefined) return 'undefined'
+//   if (Array.isArray(value)) {
+//     if (value.length === 0) return 'any[]'
+//     // Try to infer array element type from first element
+//     const firstElementType = inferType(value[0])
+//     return `${firstElementType}[]`
+//   }
+//   if (typeof value === 'object') {
+//     // For objects, we could either use a generic Record type or create nested interfaces
+//     // For now, let's use a more specific type
+//     if (Object.keys(value).length === 0) return 'Record<string, any>'
+//     return 'Record<string, any>' // Could be enhanced to generate nested interfaces
+//   }
+//   return typeof value
+// }
+
+// * Test added
+export const inferType = (value: unknown): string => {
+  const seen = new WeakSet()
+
+  const helper = (val: unknown): string => {
+    if (val === null) return 'null'
+    if (val === undefined) return 'undefined'
+
+    // Detect special built-in types
+    if (val instanceof Date) return 'Date'
+    if (val instanceof RegExp) return 'RegExp'
+    if (val instanceof Map) {
+      // For Map, try to infer key and value types if possible
+      if (val.size === 0) return 'Map<any, any>'
+
+      const keyTypes = new Set<string>()
+      const valueTypes = new Set<string>()
+      val.forEach((v, k) => {
+        keyTypes.add(helper(k))
+        valueTypes.add(helper(v))
+      })
+
+      const keyType =
+        keyTypes.size === 1
+          ? [...keyTypes][0]
+          : '(' + [...keyTypes].join(' | ') + ')'
+      const valueType =
+        valueTypes.size === 1
+          ? [...valueTypes][0]
+          : '(' + [...valueTypes].join(' | ') + ')'
+
+      return `Map<${keyType}, ${valueType}>`
+    }
+    if (val instanceof Set) {
+      if (val.size === 0) return 'Set<any>'
+
+      const elemTypes = new Set<string>()
+      val.forEach(v => elemTypes.add(helper(v)))
+      const elemType =
+        elemTypes.size === 1
+          ? [...elemTypes][0]
+          : '(' + [...elemTypes].join(' | ') + ')'
+
+      return `Set<${elemType}>`
+    }
+
+    const type = typeof val
+
+    if (Array.isArray(val)) {
+      if (val.length === 0) return 'any[]'
+
+      // Infer types of all elements (not just first)
+      const elementTypes = Array.from(new Set(val.map(item => helper(item))))
+      const joinedTypes =
+        elementTypes.length === 1
+          ? elementTypes[0]
+          : `(${elementTypes.join(' | ')})`
+      return `${joinedTypes}[]`
+    }
+
+    if (type === 'object') {
+      if (seen.has(val)) return 'any /* circular */'
+      seen.add(val)
+
+      const obj = val as Record<string, unknown>
+      const keys = Object.keys(obj)
+      if (keys.length === 0) return 'Record<string, any>'
+
+      const props = keys.map(key => {
+        const propType = helper(obj[key])
+        return `${key}: ${propType};`
+      })
+
+      return `{ ${props.join(' ')} }`
+    }
+
+    if (type === 'function') return 'Function'
+    if (type === 'symbol') return 'symbol'
+
+    return type
+  }
+
+  return helper(value)
 }
 
-function inferType(value: any): string {
-  if (value === null) return 'null'
-  if (value === undefined) return 'undefined'
-  if (Array.isArray(value)) {
-    if (value.length === 0) return 'any[]'
-    // Try to infer array element type from first element
-    const firstElementType = inferType(value[0])
-    return `${firstElementType}[]`
-  }
-  if (typeof value === 'object') {
-    // For objects, we could either use a generic Record type or create nested interfaces
-    // For now, let's use a more specific type
-    if (Object.keys(value).length === 0) return 'Record<string, any>'
-    return 'Record<string, any>' // Could be enhanced to generate nested interfaces
-  }
-  return typeof value
-}
-
-function getTypeDescription(value: any): string {
+// * Test added
+export const getTypeDescription = (value: unknown): string => {
   if (value === null) return 'Nullable value'
   if (value === undefined) return 'Undefined value'
   if (Array.isArray(value)) {

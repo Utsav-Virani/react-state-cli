@@ -1,34 +1,37 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander'
-import path from 'path'
-import fs from 'fs-extra'
-import chalk from 'chalk'
-import { generateFilesFromInitState } from './generate.js'
+import { Command } from 'commander' //CLI framework
+import path from 'path' // Helps resolve full file paths
+import fs from 'fs-extra' // Extends fs with more features
+import chalk from 'chalk' // Colored console output
+import { generateFilesFromInitState } from './generate.js' //Function to generate files from initState.ts
 
+//Setup CLI Program
 const program = new Command()
 
 program
   .name('react-state-cli')
   .description('CLI to generate Redux boilerplate from initState.ts')
-  .version('1.0.1')
+  .version('1.1.0')
 
+// Generate Command
 program
   .command('generate')
   .argument('<initStatePath>', 'Path to initState.ts file')
-  .option('-v, --verbose', 'Enable verbose logging')
-  .option('--dry-run', 'Show what would be generated without creating files')
+  .option('-v, --verbose', 'Enable verbose logging') //Prints extra debug output
+  .option('--dry-run', 'Show what would be generated without creating files') // Simulates generation, doesn't actually write files
+  //Command Logic
   .action(async (initStatePath, options) => {
     try {
       const fullPath = path.resolve(process.cwd(), initStatePath)
 
-      // Validate input file exists
+      //? Validate input file exists
       if (!(await fs.pathExists(fullPath))) {
         console.error(chalk.red(`❌ Error: File not found: ${fullPath}`))
         process.exit(1)
       }
 
-      // Validate it's a TypeScript file
+      //? Validate it's a TypeScript file
       if (!fullPath.endsWith('.ts') && !fullPath.endsWith('.js')) {
         console.error(chalk.red('❌ Error: File must be a .ts or .js file'))
         process.exit(1)
@@ -38,8 +41,10 @@ program
         console.log(chalk.blue(`🔍 Processing: ${fullPath}`))
       }
 
+      //? Main task Execution
       await generateFilesFromInitState(fullPath, options)
 
+      // * Success Message
       console.log(chalk.green('🎉 Redux boilerplate generated successfully!'))
     } catch (error) {
       console.error(
@@ -54,4 +59,5 @@ program
     }
   })
 
+// ? Executes the CLI command
 program.parse()

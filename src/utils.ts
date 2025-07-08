@@ -7,9 +7,9 @@ import fs from 'fs-extra'
  * @returns Promise<Record<string, any>> - The parsed initial state object
  * @throws Error if file is invalid or doesn't export proper object
  */
-export async function parseInitState(
+export const parseInitState = async (
   filePath: string
-): Promise<Record<string, any>> {
+): Promise<Record<string, any>> => {
   try {
     // Verify file exists
     if (!(await fs.pathExists(filePath))) {
@@ -86,7 +86,7 @@ export async function parseInitState(
 /**
  * Import a TypeScript file using ts-node
  */
-async function importTypeScriptFile(filePath: string): Promise<any> {
+const importTypeScriptFile = async (filePath: string): Promise<any> => {
   try {
     // Use dynamic import with ts-node/esm loader
     const { register } = await import('ts-node')
@@ -133,11 +133,14 @@ async function importTypeScriptFile(filePath: string): Promise<any> {
 /**
  * Check if a string is a reserved JavaScript keyword
  */
-function isReservedKeyword(word: string): boolean {
-  const reservedWords = [
+export const isReservedKeyword = (word: string): boolean => {
+  const reservedWords = new Set([
     'break',
     'case',
     'catch',
+    'true',
+    'false',
+    'console',
     'class',
     'const',
     'continue',
@@ -164,6 +167,8 @@ function isReservedKeyword(word: string): boolean {
     'try',
     'typeof',
     'var',
+    'null',
+    'undefined',
     'void',
     'while',
     'with',
@@ -176,17 +181,16 @@ function isReservedKeyword(word: string): boolean {
     'package',
     'private',
     'protected',
-    'public'
-  ]
-  return reservedWords.includes(word.toLowerCase())
-}
+    'public',
+    'NaN',
+    'Infinity',
+    'Date',
+    'RegExp',
+    'Function',
+    'Map',
+    'Set',
+    'Symbol'
+  ])
 
-/**
- * Validate that a string is a valid TypeScript identifier
- */
-export function isValidIdentifier(name: string): boolean {
-  // Must start with letter, underscore, or dollar sign
-  // Can contain letters, digits, underscores, or dollar signs
-  const identifierRegex = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/
-  return identifierRegex.test(name) && !isReservedKeyword(name)
+  return reservedWords.has(word)
 }
