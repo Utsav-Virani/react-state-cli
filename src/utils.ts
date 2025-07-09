@@ -7,10 +7,12 @@ import fs from 'fs-extra'
  * @returns Promise<Record<string, any>> - The parsed initial state object
  * @throws Error if file is invalid or doesn't export proper object
  */
-export async function parseInitState(filePath: string): Promise<Record<string, any>> {
+export const parseInitState = async (
+  filePath: string
+): Promise<Record<string, any>> => {
   try {
     // Verify file exists
-    if (!await fs.pathExists(filePath)) {
+    if (!(await fs.pathExists(filePath))) {
       throw new Error(`File not found: ${filePath}`)
     }
 
@@ -21,16 +23,27 @@ export async function parseInitState(filePath: string): Promise<Record<string, a
     }
 
     // Import the file
-    const imported = await import(filePath)
-    
+    let imported: any
+
+    if (filePath.endsWith('.ts')) {
+      // For TypeScript files, use ts-node to compile and evaluate
+      imported = await importTypeScriptFile(filePath)
+    } else {
+      imported = await import(filePath)
+    }
+
     // Validate default export exists
     if (!imported.default) {
-      throw new Error(`File must export a default object. Found: ${typeof imported.default}`)
+      throw new Error(
+        `File must export a default object. Found: ${typeof imported.default}`
+      )
     }
 
     // Validate it's an object
     if (typeof imported.default !== 'object' || imported.default === null) {
-      throw new Error(`Default export must be an object. Found: ${typeof imported.default}`)
+      throw new Error(
+        `Default export must be an object. Found: ${typeof imported.default}`
+      )
     }
 
     // Validate it's not an array
@@ -38,57 +51,145 @@ export async function parseInitState(filePath: string): Promise<Record<string, a
       throw new Error('Default export must be an object, not an array')
     }
 
-    // Validate it's not empty
-    const keys = Object.keys(imported.default)
-    if (keys.length === 0) {
-      throw new Error('Default export object cannot be empty')
-    }
+    // Note: Empty object validation is handled by generateFilesFromInitState
 
     // Validate object structure
-    for (const [key, value] of Object.entries(imported.default)) {
+    for (const [key] of Object.entries(imported.default)) {
       if (typeof key !== 'string' || key.trim() === '') {
         throw new Error(`Invalid property key: ${key}`)
       }
-      
+
       // Check for reserved JavaScript keywords
       if (isReservedKeyword(key)) {
-        throw new Error(`Property name "${key}" is a reserved JavaScript keyword`)
+        throw new Error(
+          `Property name "${key}" is a reserved JavaScript keyword`
+        )
       }
     }
 
     return imported.default as Record<string, any>
-    
   } catch (error) {
     if (error instanceof Error) {
       // Re-throw with more context
-      throw new Error(`Failed to parse initial state from ${path.basename(filePath)}: ${error.message}`)
+      throw new Error(
+        `Failed to parse initial state from ${path.basename(filePath)}: ${error.message}`
+      )
     }
     throw error
   }
 }
 
 /**
- * Check if a string is a reserved JavaScript keyword
+ * Import a TypeScript file using ts-node
  */
-function isReservedKeyword(word: string): boolean {
-  const reservedWords = [
-    'break', 'case', 'catch', 'class', 'const', 'continue', 'debugger', 'default',
-    'delete', 'do', 'else', 'export', 'extends', 'finally', 'for', 'function',
-    'if', 'import', 'in', 'instanceof', 'new', 'return', 'super', 'switch',
-    'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'yield',
-    'let', 'static', 'enum', 'implements', 'interface', 'package', 'private',
-    'protected', 'public'
-  ]
-  return reservedWords.includes(word.toLowerCase())
+// * Testcase: added
+export const importTypeScriptFile = async (filePath: string): Promise<any> => {
+  try {
+    // Use dynamic import with ts-node/esm loader
+    const { register } = await import('ts-node')
+
+    // Register ts-node for ESM
+    register({
+      esm: true,
+      experimentalSpecifierResolution: 'node'
+    })
+
+    // Import the TypeScript file
+    const absolutePath = path.resolve(filePath)
+    const fileUrl = `file://${absolutePath}`
+    return await import(fileUrl)
+  } catch (error) {
+    // Fallback: try to compile and evaluate manually
+    const tsNode = await import('ts-node')
+    const service = tsNode.create({
+      compilerOptions: {
+        module: 'ESNext',
+        target: 'ES2020',
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true
+      }
+    })
+
+    const fileContent = await fs.readFile(filePath, 'utf-8')
+    const compiled = service.compile(fileContent, filePath)
+
+    // Create a temporary file to import
+    const tempFile = filePath.replace('.ts', '.temp.js')
+    await fs.writeFile(tempFile, compiled)
+
+    try {
+      const absoluteTempPath = path.resolve(tempFile)
+      const result = await import(`file://${absoluteTempPath}`)
+      await fs.remove(tempFile)
+      return result
+    } catch (importError) {
+      await fs.remove(tempFile)
+      throw importError
+    }
+  }
 }
 
 /**
- * Validate that a string is a valid TypeScript identifier
+ * Check if a string is a reserved JavaScript keyword
  */
-export function isValidIdentifier(name: string): boolean {
-  // Must start with letter, underscore, or dollar sign
-  // Can contain letters, digits, underscores, or dollar signs
-  const identifierRegex = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/
-  return identifierRegex.test(name) && !isReservedKeyword(name)
+// * Testcase: added
+export const isReservedKeyword = (word: string): boolean => {
+  const reservedWords = new Set([
+    'break',
+    'case',
+    'catch',
+    'true',
+    'false',
+    'console',
+    'class',
+    'const',
+    'continue',
+    'debugger',
+    'default',
+    'delete',
+    'do',
+    'else',
+    'export',
+    'extends',
+    'finally',
+    'for',
+    'function',
+    'if',
+    'import',
+    'in',
+    'instanceof',
+    'new',
+    'return',
+    'super',
+    'switch',
+    'this',
+    'throw',
+    'try',
+    'typeof',
+    'var',
+    'null',
+    'undefined',
+    'void',
+    'while',
+    'with',
+    'yield',
+    'let',
+    'static',
+    'enum',
+    'implements',
+    'interface',
+    'package',
+    'private',
+    'protected',
+    'public',
+    'NaN',
+    'Infinity',
+    'Date',
+    'RegExp',
+    'Map',
+    'Set',
+    'Symbol'
+  ])
+
+  return reservedWords.has(word)
 }
-  

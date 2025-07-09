@@ -8,7 +8,7 @@
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -40,7 +40,7 @@
   "bugs": {
     "url": "https://github.com/Utsav-Virani/react-state-cli/issues"
   },
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
     "chalk": "^5.4.1",
@@ -48,16 +48,19 @@
     "ejs": "^3.1.10",
     "fs-extra": "^11.3.0",
     "ts-morph": "^26.0.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@types/ejs": "^3.1.5",
     "@types/fs-extra": "^11.0.4",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.0.0",
-    "prettier": "^3.0.0"
+    "@types/node": "^24.0.10",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.0.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "bin": {
     "react-state-cli": "./dist/index.js"
