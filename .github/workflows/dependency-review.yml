@@ -22,7 +22,7 @@ jobs:
       uses: actions/dependency-review-action@v4
       with:
         fail-on-severity: high
-        allow-dependencies-licenses: MIT, Apache-2.0, BSD-3-Clause, ISC, BSD-2-Clause
+        allow-licenses: MIT, Apache-2.0, BSD-3-Clause, ISC, BSD-2-Clause
         deny-licenses: GPL-3.0, LGPL-3.0, AGPL-3.0
         
     - name: Setup Node.js
