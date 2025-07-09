@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { capitalize, getTypeDescription, inferType } from '../src/generate'
+import {
+  capitalize,
+  getTypeDescription,
+  inferType
+} from '../src/generate'
+
 
 describe('capitalize function', () => {
   describe('Real-world scenarios', () => {
@@ -251,3 +256,42 @@ describe('getTypeDescription function - Boundary Tests', () => {
     expect(getTypeDescription(new MyClass())).toBe('Object with 1 properties')
   })
 })
+
+// const tmpDir = path.join(os.tmpdir(), 'gen-test')
+
+// async function writeInitState(name: string, content: string): Promise<string> {
+//   const dir = path.join(tmpDir, 'src', 'redux', name)
+//   await fs.ensureDir(dir)
+//   const filePath = path.join(dir, 'initState.ts')
+//   await fs.writeFile(filePath, content)
+//   return filePath
+// }
+
+// describe('generateFilesFromInitState', () => {
+//   beforeEach(async () => {
+//     await fs.emptyDir(tmpDir)
+//   })
+
+//   it('should generate slice, types, reducers, and state files', async () => {
+//     const initStatePath = await writeInitState(
+//       'user',
+//       `export default {
+//       name: "Alice",
+//       age: 25
+//     }`
+//     )
+
+//     await generateFilesFromInitState(initStatePath)
+
+//     // Check that files exist
+//     const expectedFiles = ['slice.ts', 'types.ts', 'reducers.ts']
+//     for (const file of expectedFiles) {
+//       const fullPath = path.join(tmpDir, 'src', 'redux', 'user', file)
+//       const exists = await fs.pathExists(fullPath)
+//       expect(exists).toBe(true)
+//     }
+
+//     const stateFile = path.join(tmpDir, 'src', 'redux', 'state.ts')
+//     expect(await fs.pathExists(stateFile)).toBe(true)
+//   })
+// })

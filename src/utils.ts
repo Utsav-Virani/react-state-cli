@@ -51,11 +51,7 @@ export const parseInitState = async (
       throw new Error('Default export must be an object, not an array')
     }
 
-    // Validate it's not empty
-    const keys = Object.keys(imported.default)
-    if (keys.length === 0) {
-      throw new Error('Default export object cannot be empty')
-    }
+    // Note: Empty object validation is handled by generateFilesFromInitState
 
     // Validate object structure
     for (const [key] of Object.entries(imported.default)) {
@@ -86,7 +82,8 @@ export const parseInitState = async (
 /**
  * Import a TypeScript file using ts-node
  */
-const importTypeScriptFile = async (filePath: string): Promise<any> => {
+// * Testcase: added
+export const importTypeScriptFile = async (filePath: string): Promise<any> => {
   try {
     // Use dynamic import with ts-node/esm loader
     const { register } = await import('ts-node')
@@ -98,7 +95,8 @@ const importTypeScriptFile = async (filePath: string): Promise<any> => {
     })
 
     // Import the TypeScript file
-    const fileUrl = `file://${filePath}`
+    const absolutePath = path.resolve(filePath)
+    const fileUrl = `file://${absolutePath}`
     return await import(fileUrl)
   } catch (error) {
     // Fallback: try to compile and evaluate manually
@@ -120,7 +118,8 @@ const importTypeScriptFile = async (filePath: string): Promise<any> => {
     await fs.writeFile(tempFile, compiled)
 
     try {
-      const result = await import(`file://${tempFile}`)
+      const absoluteTempPath = path.resolve(tempFile)
+      const result = await import(`file://${absoluteTempPath}`)
       await fs.remove(tempFile)
       return result
     } catch (importError) {
@@ -133,6 +132,7 @@ const importTypeScriptFile = async (filePath: string): Promise<any> => {
 /**
  * Check if a string is a reserved JavaScript keyword
  */
+// * Testcase: added
 export const isReservedKeyword = (word: string): boolean => {
   const reservedWords = new Set([
     'break',
@@ -186,7 +186,6 @@ export const isReservedKeyword = (word: string): boolean => {
     'Infinity',
     'Date',
     'RegExp',
-    'Function',
     'Map',
     'Set',
     'Symbol'

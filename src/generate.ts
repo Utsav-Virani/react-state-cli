@@ -70,6 +70,9 @@ export const generateFilesFromInitState = async (
     }
 
     const initState = await parseInitState(initStatePath)
+    if (!initState || Object.keys(initState).length === 0) {
+      throw new Error('Initial state object is empty')
+    }
     const keys = Object.keys(initState)
 
     if (keys.length === 0) {
